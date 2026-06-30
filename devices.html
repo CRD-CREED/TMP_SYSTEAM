@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>设备台账</title>
+<style>
+body{margin:0;font-family:微软雅黑;}
+.container{padding:30px;max-width:1200px;margin:0 auto;}
+h2{text-align:center;color:#333;margin-bottom:25px;font-size:28px;}
+table{width:100%;border-collapse:collapse;background:#fff;box-shadow:0 0 10px #eee;}
+th,td{padding:14px 10px;text-align:center;border:1px solid #eee;font-size:16px;}
+th{background:#f7f8fa;color:#333;}
+.status-fault{color:red;font-weight:bold;}
+.status-normal{color:#000;}
+</style>
+</head>
+<body>
+<div id="navbar"></div>
+<div class="container">
+    <h2>设备台账</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>设备编号</th>
+                <th>设备名称</th>
+                <th>设备类型</th>
+                <th>存放位置</th>
+                <th>运行状态</th>
+            </tr>
+        </thead>
+        <tbody id="devBody"></tbody>
+    </table>
+</div>
+<script>
+fetch("/navbar.html").then(res=>res.text()).then(html=>{
+    document.getElementById("navbar").innerHTML = html;
+    loadDevice();
+})
+
+function loadDevice(){
+    fetch("/api/devices").then(res=>res.json()).then(data=>{
+        let html = "";
+        data.data.forEach(item=>{
+            let cls = "status-normal";
+            if(item.status === "故障" || item.status === "维修中") cls = "status-fault";
+            html += `<tr>
+                <td>${item.device_code}</td>
+                <td>${item.device_name}</td>
+                <td>${item.device_type}</td>
+                <td>${item.location}</td>
+                <td class="${cls}">${item.status}</td>
+            </tr>`;
+        })
+        document.getElementById("devBody").innerHTML = html;
+    })
+}
+</script>
+</body>
+</html>
