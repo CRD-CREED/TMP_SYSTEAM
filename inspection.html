@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>日常点检</title>
+<style>
+body{margin:0;font-family:微软雅黑;}
+.box{width:700px;margin:30px auto;background:#fff;padding:30px;border-radius:8px;box-shadow:0 0 8px #eee;}
+h2{text-align:center;color:#333;margin-bottom:25px;}
+.item{margin:18px 0;}
+label{display:block;margin-bottom:6px;color:#444;font-size:16px;}
+select,textarea{width:100%;box-sizing:border-box;padding:10px;border:1px solid #ddd;border-radius:4px;font-size:16px;}
+textarea{height:100px;resize:none;}
+#subBtn{width:100%;background:#6b5ae0;color:#fff;border:none;padding:12px;font-size:17px;border-radius:4px;cursor:pointer;margin-top:10px;}
+</style>
+</head>
+<body>
+<div id="navbar"></div>
+<div class="box">
+    <h2>TPM日常自主点检记录</h2>
+    <div class="item">
+        <label>选择点检设备</label>
+        <select id="devSel"></select>
+    </div>
+    <div class="item">
+        <label>点检内容（清洁/润滑/紧固等）</label>
+        <textarea id="content" placeholder="填写今日设备点检完成内容"></textarea>
+    </div>
+    <div class="item">
+        <label>发现异常问题（无则填空）</label>
+        <textarea id="issue" placeholder="如有异响、漏油、松动等异常请填写"></textarea>
+    </div>
+    <button id="subBtn">提交点检记录</button>
+</div>
+
+<script>
+let user;
+fetch("/navbar.html").then(res=>res.text()).then(html=>{
+    document.getElementById("navbar").innerHTML = html;
+    user = JSON.parse(localStorage.getItem("user"));
+    loadDev();
+})
+
+function loadDev(){
+    fetch("/api/devices").then(res=>res.json()).then(data=>{
+        let sel = document.getElementById("devSel");
+        data.data.forEach(item=>{
+            sel.innerHTML += `<option value="${item.id}">${item.device_code}-${item.device_name}</option>`;
+        })
+    })
+}
+
+document.getElementById("subBtn").onclick = function(){
+    let did = document.getElementById("devSel").value;
+    let con = document.getElementById("content").value;
+    let iss = document.getElementById("issue").value;
+    fetch("/api/inspection/add",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({device_id:did,user_id:user.uid,content:con,issue:iss})
+    }).then(res=>res.json()).then(data=>{
+        alert(data.msg);
+        if(data.code===200) location.reload();
+    })
+}
+</script>
+</body>
+</html>
