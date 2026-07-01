@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>TPM系统登录/注册</title>
+<style>
+body{background:#f4f6f8;margin:0;padding-top:80px;font-family:微软雅黑;}
+.login-box{width:400px;margin:0 auto;background:#fff;padding:30px;border-radius:8px;box-shadow:0 0 12px #ddd;}
+.tabs{display:flex;margin-bottom:25px;}
+.tab-btn{flex:1;text-align:center;padding:10px;cursor:pointer;border-bottom:3px solid transparent;font-size:18px;color:#888;}
+.tab-btn.active{color:#6b5ae0;border-bottom-color:#6b5ae0;font-weight:bold;}
+.form-box{display:none;}
+.form-box.active{display:block;}
+.item{margin:18px 0;}
+label{display:block;margin-bottom:6px;color:#555;}
+input,select{width:100%;box-sizing:border-box;padding:10px;border:1px solid #ddd;border-radius:4px;font-size:16px;}
+.btn-primary{width:100%;background:#6b5ae0;color:#fff;border:none;padding:12px;font-size:17px;border-radius:4px;cursor:pointer;}
+</style>
+</head>
+<body>
+<div class="login-box">
+    <div class="tabs">
+        <div class="tab-btn active" id="tabLogin">登录</div>
+        <div class="tab-btn" id="tabReg">注册</div>
+    </div>
+    <!-- 登录表单 -->
+    <div class="form-box active" id="loginForm">
+        <div class="item">
+            <label>账号</label>
+            <input id="loginUsername" placeholder="输入账号">
+        </div>
+        <div class="item">
+            <label>密码</label>
+            <input id="loginPassword" type="password" placeholder="输入密码">
+        </div>
+        <div class="item">
+            <label>身份工种</label>
+            <select id="loginRole">
+                <option value="operator">普通操作员</option>
+                <option value="maintainer">维修员</option>
+                <option value="admin">管理员</option>
+            </select>
+        </div>
+        <div class="item">
+            <button class="btn-primary" id="loginBtn">登录系统</button>
+        </div>
+    </div>
+    <!-- 注册表单 -->
+    <div class="form-box" id="regForm">
+        <div class="item">
+            <label>账号</label>
+            <input id="regUsername" placeholder="设置登录账号">
+        </div>
+        <div class="item">
+            <label>密码</label>
+            <input id="regPassword" type="password" placeholder="设置密码">
+        </div>
+        <div class="item">
+            <label>确认密码</label>
+            <input id="regPassword2" type="password" placeholder="再次输入密码">
+        </div>
+        <div class="item">
+            <label>真实姓名</label>
+            <input id="regRealname" placeholder="输入您的姓名">
+        </div>
+        <div class="item">
+            <label>身份工种</label>
+            <select id="regRole">
+                <option value="operator">普通操作员</option>
+                <option value="maintainer">维修员</option>
+            </select>
+        </div>
+        <div class="item">
+            <button class="btn-primary" id="regBtn">立即注册</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// 切换登录/注册表单
+document.getElementById("tabLogin").onclick = function() {
+    document.getElementById("tabLogin").classList.add("active");
+    document.getElementById("tabReg").classList.remove("active");
+    document.getElementById("loginForm").classList.add("active");
+    document.getElementById("regForm").classList.remove("active");
+};
+document.getElementById("tabReg").onclick = function() {
+    document.getElementById("tabReg").classList.add("active");
+    document.getElementById("tabLogin").classList.remove("active");
+    document.getElementById("regForm").classList.add("active");
+    document.getElementById("loginForm").classList.remove("active");
+};
+
+// 登录逻辑（保持原样，仅id微调）
+document.getElementById("loginBtn").onclick = function() {
+    let uname = document.getElementById("loginUsername").value;
+    let pwd = document.getElementById("loginPassword").value;
+    let r = document.getElementById("loginRole").value;
+    fetch("/api/login",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({username:uname,password:pwd,role:r})
+    }).then(res=>res.json()).then(data=>{
+        if(data.code===200){
+            localStorage.setItem("user",JSON.stringify(data.data));
+            alert(data.msg);
+            location.href="/index.html";
+        }else{
+            alert(data.msg);
+        }
+    });
+};
+
+// 注册逻辑
+document.getElementById("regBtn").onclick = function() {
+    let uname = document.getElementById("regUsername").value.trim();
+    let pwd = document.getElementById("regPassword").value;
+    let pwd2 = document.getElementById("regPassword2").value;
+    let realname = document.getElementById("regRealname").value.trim();
+    let role = document.getElementById("regRole").value;
+
+    // 基本校验
+    if (!uname || !pwd || !pwd2 || !realname) {
+        alert("所有字段不能为空");
+        return;
+    }
+    if (pwd !== pwd2) {
+        alert("两次密码输入不一致");
+        return;
+    }
+
+    fetch("/api/register", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            username: uname,
+            password: pwd,
+            real_name: realname,
+            role: role
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        alert(data.msg);
+        if (data.code === 200) {
+            // 注册成功，自动切换到登录页并回填账号密码
+            document.getElementById("tabLogin").click();
+            document.getElementById("loginUsername").value = uname;
+            document.getElementById("loginPassword").value = pwd;
+            document.getElementById("loginRole").value = role;
+        }
+    });
+};
+</script>
+</body>
+</html>
