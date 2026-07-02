@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>故障报修</title>
+<style>
+body{margin:0;font-family:微软雅黑;}
+.box{width:700px;margin:30px auto;background:#fff;padding:30px;border-radius:8px;box-shadow:0 0 8px #eee;}
+h2{text-align:center;color:#333;margin-bottom:25px;}
+.item{margin:18px 0;}
+label{display:block;margin-bottom:6px;color:#444;font-size:16px;}
+select,textarea{width:100%;box-sizing:border-box;padding:10px;border:1px solid #ddd;border-radius:4px;font-size:16px;}
+textarea{height:100px;resize:none;}
+#subBtn{width:100%;background:#6b5ae0;color:#fff;border:none;padding:12px;font-size:17px;border-radius:4px;cursor:pointer;margin-top:10px;}
+</style>
+</head>
+<body>
+<div id="navbar"></div>
+<div class="box">
+    <h2>设备故障报修</h2>
+    <div class="item">
+        <label>故障设备</label>
+        <select id="devSel"></select>
+    </div>
+    <div class="item">
+        <label>故障详细描述</label>
+        <textarea id="desc" placeholder="详细说明设备故障现象、发生时间"></textarea>
+    </div>
+    <div class="item">
+        <label>紧急程度</label>
+        <select id="urgency">
+            <option value="一般">一般</option>
+            <option value="紧急">紧急</option>
+            <option value="停机严重">停机严重</option>
+        </select>
+    </div>
+    <button id="subBtn">提交报修工单</button>
+</div>
+
+<script>
+let user;
+fetch("/navbar.html").then(res=>res.text()).then(html=>{
+    document.getElementById("navbar").innerHTML = html;
+    user = JSON.parse(localStorage.getItem("user"));
+    loadDev();
+})
+
+function loadDev(){
+    fetch("/api/devices").then(res=>res.json()).then(data=>{
+        let sel = document.getElementById("devSel");
+        data.data.forEach(item=>{
+            sel.innerHTML += `<option value="${item.id}">${item.device_code}-${item.device_name}</option>`;
+        })
+    })
+}
+
+document.getElementById("subBtn").onclick = function(){
+    let did = document.getElementById("devSel").value;
+    let des = document.getElementById("desc").value;
+    let urg = document.getElementById("urgency").value;
+    fetch("/api/repair/add",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({device_id:did,user_id:user.uid,description:des,urgency:urg})
+    }).then(res=>res.json()).then(data=>{
+        alert(data.msg);
+        if(data.code===200) location.reload();
+    })
+}
+</script>
+</body>
+</html>

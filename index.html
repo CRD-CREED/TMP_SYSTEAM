@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>首页</title>
+<style>
+body{margin:0;font-family:微软雅黑;}
+.main{padding:60px 20px;text-align:center;}
+h1{color:#333;font-size:42px;}
+.desc{font-size:20px;color:#666;margin-top:20px;line-height:1.8;}
+</style>
+</head>
+<body>
+<div id="navbar"></div>
+<div class="main">
+    <h1>TPM 全员生产运维管理系统</h1>
+    <p class="desc">
+        实现设备台账管理、操作员日常自主点检、故障线上报修、维修工单流转全流程管控<br>
+        全员参与设备保全，实现预防式维护，降低设备故障停机率
+    </p>
+</div>
+<script>
+fetch("/navbar.html").then(res=>res.text()).then(html=>{
+    document.getElementById("navbar").innerHTML = html;
+})
+</script>
+</body>
+</html>

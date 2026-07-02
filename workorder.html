@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>工单管理</title>
+<style>
+    body{margin:0;padding:0;font-family: "Microsoft YaHei", sans-serif;}
+    .container{padding:20px;max-width:1200px;margin:0 auto;}
+    h2{text-align:center;color:#333;margin-bottom:20px;}
+    table{width:100%;border-collapse:collapse;background:#fff;box-shadow:0 0 8px #eee;}
+    th,td{padding:12px 10px;text-align:center;border:1px solid #eee;}
+    th{background:#f8f9fa;color:#333;}
+    .btn{padding:6px 12px;border:none;border-radius:4px;color:#fff;cursor:pointer;margin:0 4px;}
+    .btn-doing{background:#409eff;}
+    .btn-done{background:#67c23a;}
+</style>
+</head>
+<body>
+
+<div id="navbar"></div>
+
+<div class="container">
+    <h2>TPM 设备维修工单管理</h2>
+    <table id="orderTable">
+        <thead>
+            <tr>
+                <th>工单号</th>
+                <th>设备名称</th>
+                <th>报修人</th>
+                <th>故障描述</th>
+                <th>紧急程度</th>
+                <th>当前状态</th>
+                <th>报修时间</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody id="orderBody"></tbody>
+    </table>
+</div>
+
+<script>
+// 获取当前登录用户
+let currentUser = JSON.parse(localStorage.getItem("user"));
+if (!currentUser) {
+    location.href = "/login.html";
+}
+
+fetch("/navbar.html")
+    .then(res => res.text())
+    .then(data => {
+        document.getElementById("navbar").innerHTML = data;
+        loadOrderList();
+    });
+
+function loadOrderList() {
+    fetch("/api/repair/all")
+        .then(res => res.json())
+        .then(resData => {
+            let html = "";
+            resData.data.forEach(item => {
+                html += `<tr>
+                    <td>${item.work_order}</td>
+                    <td>${item.device_name}</td>
+                    <td>${item.real_name}</td>
+                    <td>${item.description}</td>
+                    <td>${item.urgency}</td>
+                    <td>${item.status}</td>
+                    <td>${item.create_time}</td>
+                    <td>`;
+                // 只有维修员和管理员显示操作按钮
+                if (currentUser.role === 'maintainer' || currentUser.role === 'admin') {
+                    html += `
+                        <button class="btn btn-doing" onclick="updateStatus('${item.work_order}','处理中')">接单处理</button>
+                        <button class="btn btn-done" onclick="updateStatus('${item.work_order}','已完成')">已完成</button>
+                    `;
+                } else {
+                    html += `<span style="color:#999;">无操作权限</span>`;
+                }
+                html += `</td></tr>`;
+            });
+            document.getElementById("orderBody").innerHTML = html;
+        });
+}
+
+function updateStatus(wo, status) {
+    // 将角色传给后端再次校验
+    fetch("/api/repair/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            work_order: wo,
+            status: status,
+            role: currentUser.role
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        alert(data.msg);
+        if (data.code === 200) {
+            loadOrderList();  // 刷新列表
+        }
+    });
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>我的记录</title>
+<style>
+body{margin:0;font-family:微软雅黑;}
+.container{padding:30px;max-width:1200px;margin:0 auto;}
+h2{text-align:center;color:#333;margin-bottom:20px;font-size:26px;}
+h3{color:#555;margin:30px 0 12px;}
+table{width:100%;border-collapse:collapse;background:#fff;box-shadow:0 0 8px #eee;margin-bottom:40px;}
+th,td{padding:12px 10px;text-align:center;border:1px solid #eee;font-size:15px;}
+th{background:#f7f8fa;}
+</style>
+</head>
+<body>
+<div id="navbar"></div>
+<div class="container">
+    <h2>我的点检与报修记录</h2>
+    <h3>一、我的日常点检记录</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>设备名称</th>
+                <th>点检内容</th>
+                <th>异常问题</th>
+                <th>提交时间</th>
+            </tr>
+        </thead>
+        <tbody id="insBody"></tbody>
+    </table>
+
+    <h3>二、我的故障报修记录</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>工单号</th>
+                <th>设备名称</th>
+                <th>故障描述</th>
+                <th>紧急程度</th>
+                <th>工单状态</th>
+                <th>报修时间</th>
+            </tr>
+        </thead>
+        <tbody id="repBody"></tbody>
+    </table>
+</div>
+
+<script>
+let user;
+fetch("/navbar.html").then(res=>res.text()).then(html=>{
+    document.getElementById("navbar").innerHTML = html;
+    user = JSON.parse(localStorage.getItem("user"));
+    loadIns();
+    loadRep();
+})
+
+function loadIns(){
+    fetch(`/api/inspection/my/${user.uid}`).then(res=>res.json()).then(data=>{
+        let html = "";
+        data.data.forEach(item=>{
+            html += `<tr>
+                <td>${item.device_name}</td>
+                <td>${item.check_content}</td>
+                <td>${item.issue||"无"}</td>
+                <td>${item.create_time}</td>
+            </tr>`;
+        })
+        document.getElementById("insBody").innerHTML = html;
+    })
+}
+
+function loadRep(){
+    fetch(`/api/repair/my/${user.uid}`).then(res=>res.json()).then(data=>{
+        let html = "";
+        data.data.forEach(item=>{
+            html += `<tr>
+                <td>${item.work_order}</td>
+                <td>${item.device_name}</td>
+                <td>${item.description}</td>
+                <td>${item.urgency}</td>
+                <td>${item.status}</td>
+                <td>${item.create_time}</td>
+            </tr>`;
+        })
+        document.getElementById("repBody").innerHTML = html;
+    })
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<style>
+.nav-wrap{
+    background: #6b5ae0;
+    display: flex;
+    align-items: center;
+    padding: 14px 25px;
+    gap: 24px;
+    width: 100%;
+    box-sizing: border-box;
+}
+.nav-wrap a {
+    color: white;
+    font-size: 17px;
+    text-decoration: none;
+    padding: 6px 10px;
+}
+.nav-wrap a:hover {
+    background: rgba(255,255,255,0.2);
+}
+.user-text{
+    margin-left: auto;
+    color: #fff;
+    font-size: 16px;
+    white-space: nowrap;
+}
+</style>
+
+<div class="nav-wrap">
+    <a href="/index.html">首页</a>
+    <a href="/devices.html">设备台账</a>
+    <a href="/inspection.html">日常点检</a>
+    <a href="/repair.html">故障报修</a>
+    <a href="/myrecords.html">我的记录</a>
+    <a href="/workorder.html">工单管理</a>
+    <a href="/login.html">退出登录</a>
+    <div class="user-text" id="roleShowBox"></div>
+</div>
+
+<script>
+let storageUser = localStorage.getItem("user");
+const roleName = {
+    "admin": "管理员",
+    "operator": "普通操作员",
+    "maintainer": "维修员"
+};
+
+if (storageUser) {
+    let user = JSON.parse(storageUser);
+    document.getElementById("roleShowBox").innerText =
+        `当前登录：${user.real_name} ｜工种：${roleName[user.role]}`;
+} else {
+    location.href = "/login.html";
+}
+</script>
